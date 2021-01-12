@@ -1,18 +1,63 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+  <div class="w-full flex justify-center">
+    <input
+      type="text"
+      placeholder="Enter Pokemon here"
+      class="mt-10 p-5 mb-5 border-blue-500 border-2"
+      v-model="text"
+    />
   </div>
+
+  <div class="classmt-10 p-4 flex flex-wrap justify-center">
+    <div
+      class="ml-4 text-2xl text-blue-500"
+      v-for="(pokemon, idx) in filteredPokemon"
+      :key="idx"
+    >
+      <router-link :to="`/about/${urlIdLookup[pokemon.name]}`">
+        {{ pokemon.name }}
+      </router-link>
+    </div>
+  </div>
+
+  <div class="home"></div>
 </template>
 
 <script>
+import { computed, reactive, toRefs } from "vue";
 // @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
 
 export default {
   name: "Home",
-  components: {
-    HelloWorld
+  setup() {
+    const state = reactive({
+      pokemons: [],
+      urlIdLookup: {},
+      text: "",
+      filteredPokemon: computed(() => updatePokemon())
+    });
+
+    function updatePokemon() {
+      if (!state.text) {
+        return [];
+      }
+
+      return state.pokemons.filter(pokemon =>
+        pokemon.name.includes(state.text)
+      );
+    }
+
+    fetch("https://pokeapi.co/api/v2/pokemon?limit=5000")
+      .then(res => res.json())
+      .then(data => {
+        state.pokemons = data.results;
+        state.urlIdLookup = data.results.reduce(
+          (acc, cur, idx) => (acc = { ...acc, [cur.name]: idx + 1 }),
+          {}
+        );
+      });
+
+    return { ...toRefs(state) };
   }
 };
 </script>
